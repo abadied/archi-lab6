@@ -22,7 +22,7 @@ int main(int argc, char** argv)
         if(strcmp(argv[1],"-d") == 0)
             debug_mode = 1;
     }
-    char* const args1[3] = {"/bin/ls", "-l", 0}; 
+    char* const args1[3] = {"ls", "-l", 0}; 
 
     char* const args2[4] = {"tail","-n","2", 0}; 
 

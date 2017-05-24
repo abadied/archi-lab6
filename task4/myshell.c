@@ -91,6 +91,8 @@ int replaceVars(linkedMap** dic, cmdLine* pCmdLine){
 			replaceCmdArg(pCmdLine, i, getenv("HOME"));
 		}
 	}
+	if (pCmdLine->next)
+		return replaceVars(dic, pCmdLine->next);
 	return 0;
 }
 
@@ -120,6 +122,9 @@ void execute(cmdLine *pCmdLine, job* curr_job){
 			signal(SIGTTOU, SIG_DFL);
 			
 			setpgid(0, getpid());
+			if (debug)
+				fprintf(stderr, "command: %s\nchild ID:%d\npgid: %d\n",
+						pCmdLine->arguments[0], getpid(), getpgid(0));
 			
 			curr_job->pgid = getpgid(0);
 			if(use_pipe){
@@ -134,8 +139,6 @@ void execute(cmdLine *pCmdLine, job* curr_job){
 			_exit(EXIT_SUCCESS);
 		break;
 		default:
-			if (debug)
-				fprintf(stderr,"Executing Command: %s\nChild PID: %d\n",pCmdLine->arguments[0],pid);
 			
 			if(use_pipe){
 				pCmdLine = pCmdLine->next;
@@ -152,7 +155,10 @@ void execute(cmdLine *pCmdLine, job* curr_job){
 						signal(SIGTTIN, SIG_DFL);
 						signal(SIGTTOU, SIG_DFL);
 						
-						setpgid(0, getpid());
+						setpgid(0, pid);
+						if (debug)
+							fprintf(stderr, "command: %s\nchild ID:%d\npgid: %d\n",
+								pCmdLine->arguments[0], getpid(), getpgid(0));
 						
 						/*curr_job->pgid = getpgid(0);*/
 						close(0);
@@ -167,8 +173,6 @@ void execute(cmdLine *pCmdLine, job* curr_job){
 					break;
 					default:
 						close(fd[0]);
-						if (debug)
-							fprintf(stderr,"Executing Command: %s\nChild PID: %d\n",pCmdLine->arguments[0],pid2);
 						if (pCmdLine->blocking == 1){
 							waitpid(pid, &status, 0);
 							/*setpgid(0, getpid());*/
